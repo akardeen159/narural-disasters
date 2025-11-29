@@ -27,7 +27,7 @@ from typing import Tuple, Dict
 import numpy as np
 import pandas as pd
 
-DATA_DIR_NAME = "Cleaned Data"
+DATA_DIR_NAME = os.path.join("Cleaned Data", "Cleaned Data")
 
 
 def _csv_path(base_path: str, filename: str) -> str:
