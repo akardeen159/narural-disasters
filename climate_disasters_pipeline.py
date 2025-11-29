@@ -27,14 +27,13 @@ from typing import Tuple, Dict
 import numpy as np
 import pandas as pd
 
+DATA_DIR_NAME = "Cleaned Data"
 
-# --------------------------------------------------------------------
-# 1. Core loaders
-# --------------------------------------------------------------------
 
 def _csv_path(base_path: str, filename: str) -> str:
-    """Join base_path and filename into a full path."""
-    return os.path.join(base_path, filename)
+    """Join base_path, data folder and filename into a full path."""
+    return os.path.join(base_path, DATA_DIR_NAME, filename)
+
 
 
 def load_temperature_data(
@@ -47,13 +46,12 @@ def load_temperature_data(
         temps_all:   long-format table with columns ['year', 'TempF', 'source']
         temps_annual: annual averages with columns ['year', 'TempF']
     """
-    # File paths (Kaggle input paths in your dataset)
-    temps_gia_path   = "/kaggle/input/natural-disasters-and-temp/Gia_Bch_Nguyn_Earth_Temps_Cleaned.csv"
-    temps_berk_path  = "/kaggle/input/natural-disasters-and-temp/Berkeley_Earth_Temps_Cleaned.csv"
-    temps_josep_path = "/kaggle/input/natural-disasters-and-temp/Josep_Ferrer_Temps_Cleaned.csv"
+    # Paths inside the "Cleaned Data" folder
+    temps_gia_path   = _csv_path(base_path, "Gia_Bách_Nguyễn_Earth_Temps_Cleaned.csv")
+    temps_berk_path  = _csv_path(base_path, "Berkeley_Earth_Temps_Cleaned.csv")
+    temps_josep_path = _csv_path(base_path, "Josep_Ferrer_Temps_Cleaned.csv")
 
-    # --- Gia Bch Nguyn: annual averages in Fahrenheit ---
-    # expected columns: ['Year', 'Average_Fahrenheit_Temperature']
+    # --- Gia: annual averages in Fahrenheit ---
     temps_gia = pd.read_csv(temps_gia_path)
     temps_gia = temps_gia.rename(
         columns={
@@ -61,10 +59,9 @@ def load_temperature_data(
             "Average_Fahrenheit_Temperature": "TempF",
         }
     )
-    temps_gia["source"] = "Gia_Bch_Nguyn"
+    temps_gia["source"] = "Gia_Bách_Nguyễn"
 
-    # --- Berkeley Earth: monthly temps in °C -> convert to °F and create 'year' ---
-    # expected columns: ['dt', 'LandAndOceanAverageTemperature']
+    # --- Berkeley Earth: monthly temps in °C -> °F ---
     temps_berk = pd.read_csv(temps_berk_path)
     temps_berk["date"] = pd.to_datetime(temps_berk["dt"], errors="coerce")
     temps_berk["year"] = temps_berk["date"].dt.year
@@ -72,7 +69,6 @@ def load_temperature_data(
     temps_berk["source"] = "Berkeley_Earth"
 
     # --- Josep Ferrer: monthly temps in °F by country ---
-    # expected columns: ['EventDate', 'Country', 'TemperatureFahrenheit', 'Anomaly']
     temps_josep = pd.read_csv(temps_josep_path)
     temps_josep["date"] = pd.to_datetime(temps_josep["EventDate"], errors="coerce")
     temps_josep["year"] = temps_josep["date"].dt.year
@@ -91,11 +87,9 @@ def load_temperature_data(
         ignore_index=True,
     )
 
-    # Clean: drop rows with missing year or TempF
     temps_all = temps_all.dropna(subset=["year", "TempF"])
     temps_all["year"] = temps_all["year"].astype(int)
 
-    # Annual average TempF across all sources
     temps_annual = (
         temps_all.groupby("year", as_index=False)["TempF"]
         .mean()
@@ -103,6 +97,7 @@ def load_temperature_data(
     )
 
     return temps_all, temps_annual
+
 
 
 def load_disaster_data(
@@ -116,12 +111,11 @@ def load_disaster_data(
                        ['event_date', 'year', 'disaster_type', 'source']
         disasters_per_year: aggregated table ['year', 'disaster_count']
     """
-
-    dis_bar_path   = "/kaggle/input/natural-disasters-and-temp/Baris_Dincer_Disasters_Cleaned.csv"
-    dis_shrey_path = "/kaggle/input/natural-disasters-and-temp/Shreyansh_Dangi_Disasters_Cleaned.csv"
+    # Paths inside the "Cleaned Data" folder
+    dis_bar_path   = _csv_path(base_path, "Baris_Dincer_Disasters_Cleaned.csv")
+    dis_shrey_path = _csv_path(base_path, "Shreyansh_Dangi_Disasters_Cleaned.csv")
 
     # --- Baris Dinçer disasters ---
-    # expected columns: ['EventDate', 'Var2', 'Var3', 'Var4', 'Var5']
     dis_bar = pd.read_csv(dis_bar_path)
     dis_bar["event_date"] = pd.to_datetime(dis_bar["EventDate"], errors="coerce")
     dis_bar["year"] = dis_bar["event_date"].dt.year
@@ -139,7 +133,6 @@ def load_disaster_data(
     dis_bar_std = dis_bar[["event_date", "year", "disaster_type", "source"]]
 
     # --- Shreyansh Dangi disasters ---
-    # expected columns: ['Title', 'DisasterType', 'Date']
     dis_shrey = pd.read_csv(dis_shrey_path)
     dis_shrey["event_date"] = pd.to_datetime(dis_shrey["Date"], errors="coerce")
     dis_shrey["year"] = dis_shrey["event_date"].dt.year
@@ -151,11 +144,9 @@ def load_disaster_data(
     # Combine both disaster sources
     disasters_all = pd.concat([dis_bar_std, dis_shrey_std], ignore_index=True)
 
-    # Drop rows missing year or disaster_type
     disasters_all = disasters_all.dropna(subset=["year", "disaster_type"])
     disasters_all["year"] = disasters_all["year"].astype(int)
 
-    # Aggregate: disasters per year
     disasters_per_year = (
         disasters_all.groupby("year", as_index=False)
         .size()
@@ -164,6 +155,7 @@ def load_disaster_data(
     )
 
     return disasters_all, disasters_per_year
+
 
 
 # --------------------------------------------------------------------
