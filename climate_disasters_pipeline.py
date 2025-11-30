@@ -27,12 +27,21 @@ from typing import Tuple, Dict
 import numpy as np
 import pandas as pd
 
-DATA_DIR_NAME = os.path.join("Cleaned Data", "Cleaned Data")
+# Base data folders as they exist in your repo
+BASE_DATA_DIR = os.path.join("Cleaned Data", "Cleaned Data")
+TEMPS_DIR = os.path.join(BASE_DATA_DIR, "Temps")
+DISASTERS_DIR = os.path.join(BASE_DATA_DIR, "Natural Disasters")
 
 
-def _csv_path(base_path: str, filename: str) -> str:
-    """Join base_path, data folder and filename into a full path."""
-    return os.path.join(base_path, DATA_DIR_NAME, filename)
+def _temp_path(base_path: str, filename: str) -> str:
+    """Full path to a temperature CSV file."""
+    return os.path.join(base_path, TEMPS_DIR, filename)
+
+
+def _disaster_path(base_path: str, filename: str) -> str:
+    """Full path to a natural-disaster CSV file."""
+    return os.path.join(base_path, DISASTERS_DIR, filename)
+
 
 
 
@@ -41,15 +50,12 @@ def load_temperature_data(
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Load and clean temperature datasets.
-
-    Returns:
-        temps_all:   long-format table with columns ['year', 'TempF', 'source']
-        temps_annual: annual averages with columns ['year', 'TempF']
     """
-    # Paths inside the "Cleaned Data" folder
-    temps_gia_path   = _csv_path(base_path, "Gia_Bách_Nguyễn_Earth_Temps_Cleaned.csv")
-    temps_berk_path  = _csv_path(base_path, "Berkeley_Earth_Temps_Cleaned.csv")
-    temps_josep_path = _csv_path(base_path, "Josep_Ferrer_Temps_Cleaned.csv")
+    # These names must match exactly what you see in Cleaned Data/Cleaned Data/Temps
+    temps_gia_path   = _temp_path(base_path, "Gia_Bách_Nguyễn_Earth_Temps_Cleaned.csv")
+    temps_berk_path  = _temp_path(base_path, "Berkeley_Earth_Temps_Cleaned.csv")
+    temps_josep_path = _temp_path(base_path, "Josep_Ferrer_Temps_Cleaned.csv")
+
 
     # --- Gia: annual averages in Fahrenheit ---
     temps_gia = pd.read_csv(temps_gia_path)
@@ -105,15 +111,10 @@ def load_disaster_data(
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Load and clean disaster datasets.
-
-    Returns:
-        disasters_all: long-format events table with at least
-                       ['event_date', 'year', 'disaster_type', 'source']
-        disasters_per_year: aggregated table ['year', 'disaster_count']
     """
-    # Paths inside the "Cleaned Data" folder
-    dis_bar_path   = _csv_path(base_path, "Baris_Dincer_Disasters_Cleaned.csv")
-    dis_shrey_path = _csv_path(base_path, "Shreyansh_Dangi_Disasters_Cleaned.csv")
+    dis_bar_path   = _disaster_path(base_path, "Baris_Dincer_Disasters_Cleaned.csv")
+    dis_shrey_path = _disaster_path(base_path, "Shreyansh_Dangi_Disasters_Cleaned.csv")
+
 
     # --- Baris Dinçer disasters ---
     dis_bar = pd.read_csv(dis_bar_path)
